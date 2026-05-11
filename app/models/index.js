@@ -5,7 +5,6 @@ import userModel from "./user.model.js";
 import roleModel from "./role.model.js";
 import refreshTokenModel from "./refreshToken.model.js";
 
-
 const sequelize = new Sequelize(
   dbConfig.DB,
   dbConfig.USER,
@@ -14,7 +13,18 @@ const sequelize = new Sequelize(
     host: dbConfig.HOST,
     port: dbConfig.PORT,
     dialect: dbConfig.dialect,
-    logging: false
+    logging: false,
+
+    dialectOptions: {
+      connectTimeout: 60000
+    },
+
+    pool: {
+      max: 5,
+      min: 0,
+      acquire: 60000,
+      idle: 10000
+    }
   }
 );
 
@@ -23,12 +33,10 @@ const db = {};
 db.Sequelize = Sequelize;
 db.sequelize = sequelize;
 
-
 // MODELOS
 db.user = userModel(sequelize, Sequelize);
 db.role = roleModel(sequelize, Sequelize);
 db.refreshToken = refreshTokenModel(sequelize, Sequelize);
-
 
 // RELACIÓN USER - ROLE
 db.role.belongsToMany(db.user, {
@@ -38,7 +46,6 @@ db.role.belongsToMany(db.user, {
 db.user.belongsToMany(db.role, {
   through: "user_roles"
 });
-
 
 // RELACIÓN USER - REFRESH TOKEN
 db.refreshToken.belongsTo(db.user, {
@@ -50,6 +57,5 @@ db.user.hasOne(db.refreshToken, {
   foreignKey: "userId",
   targetKey: "id"
 });
-
 
 export default db;
